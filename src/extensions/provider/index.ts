@@ -1,3 +1,4 @@
+import { appendFileSync } from "node:fs";
 import type {
   BeforeProviderRequestEvent,
   ExtensionAPI,
@@ -8,6 +9,16 @@ import {
   POOLSIDE_MODELS_CACHE,
   type PoolsideModelConfig,
 } from "./models";
+
+const DEBUG_LOG_FILE = "/tmp/pi-poolside-debug.log";
+
+function debugLog(message: string, data?: unknown): void {
+  appendFileSync(
+    DEBUG_LOG_FILE,
+    `${new Date().toISOString()} [poolside] ${message}${data === undefined ? "" : ` ${JSON.stringify(data)}`}\n`,
+    "utf8",
+  );
+}
 
 function buildModelsPayload(models: PoolsideModelConfig[]) {
   return models.map((model) => ({
@@ -46,9 +57,12 @@ export default async function (pi: ExtensionAPI) {
   // parallel_tool_calls to false limits the damage and is good practice
   // regardless since Poolside docs say forced tool calling is unsupported
   // when thinking is enabled.
+  // Debug: log provider request payload to see what Pi sends
   pi.on("before_provider_request", (event: BeforeProviderRequestEvent) => {
     const payload = event.payload as Record<string, unknown> | undefined;
     if (!payload) return;
+    debugLog("before_provider_request payload", payload);
+
     // Inject parallel_tool_calls: false to reduce duplicate tool call issues
     if (
       payload.tools &&
@@ -56,6 +70,56 @@ export default async function (pi: ExtensionAPI) {
       payload.tools.length > 0
     ) {
       payload.parallel_tool_calls = false;
+    }
+  });
+
+  // Debug: log after_provider_response headers/status
+  pi.on("after_provider_response", (event, ctx) => {
+    if (ctx.model?.provider !== "poolside") return;
+    debugLog("after_provider_response", {
+      status: event.status,
+      headers: event.headers,
+    });
+  });
+
+  // Debug: log parsed stream events (toolcall_start/delta/end) to see what Pi's
+  // parser produces from the Poolside stream
+  pi.on("message_update", (event) => {
+    const msg = event.message;
+    if (msg.role !== "assistant") return;
+    const apiEvent = event.assistantMessageEvent;
+    if (
+      apiEvent.type === "toolcall_start" ||
+      apiEvent.type === "toolcall_delta" ||
+      apiEvent.type === "toolcall_end"
+    ) {
+      debugLog(`stream:${apiEvent.type}`, {
+        contentIndex: apiEvent.contentIndex,
+        ...(apiEvent.type === "toolcall_start"
+          ? {
+              partial: (
+                apiEvent.partial.content as Array<{
+                  type: string;
+                  id?: string;
+                  name?: string;
+                  streamIndex?: number;
+                }>
+              )
+                .filter((b) => b.type === "toolCall")
+                .map((b) => ({
+                  id: b.id,
+                  name: b.name,
+                  streamIndex: b.streamIndex,
+                })),
+            }
+          : {}),
+        ...(apiEvent.type === "toolcall_delta"
+          ? { delta: apiEvent.delta }
+          : {}),
+        ...(apiEvent.type === "toolcall_end"
+          ? { toolCall: apiEvent.toolCall }
+          : {}),
+      });
     }
   });
 
