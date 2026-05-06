@@ -51,39 +51,28 @@ export default async function (pi: ExtensionAPI) {
   // Register with hardcoded cache immediately so models are available on startup
   registerPoolsideProvider(pi, POOLSIDE_MODELS_CACHE);
 
-  // Poolside streaming emits tool calls with two different IDs at the same
-  // index (one for the name, one for the arguments). This can cause Pi's
-  // openai-completions parser to create phantom empty tool calls. Setting
-  // parallel_tool_calls to false limits the damage and is good practice
-  // regardless since Poolside docs say forced tool calling is unsupported
-  // when thinking is enabled.
-  // Debug: log provider request payload to see what Pi sends
+  // Log the full request payload Pi sends to Poolside
   pi.on("before_provider_request", (event: BeforeProviderRequestEvent) => {
     const payload = event.payload as Record<string, unknown> | undefined;
     if (!payload) return;
-    debugLog("before_provider_request payload", payload);
-
-    // Inject parallel_tool_calls: false to reduce duplicate tool call issues
-    if (
-      payload.tools &&
-      Array.isArray(payload.tools) &&
-      payload.tools.length > 0
-    ) {
-      payload.parallel_tool_calls = false;
-    }
+    debugLog("REQUEST", {
+      model: payload.model,
+      tool_choice: payload.tool_choice,
+      parallel_tool_calls: payload.parallel_tool_calls,
+      messages: payload.messages,
+    });
   });
 
-  // Debug: log after_provider_response headers/status
+  // Log response status/headers
   pi.on("after_provider_response", (event, ctx) => {
     if (ctx.model?.provider !== "poolside") return;
-    debugLog("after_provider_response", {
+    debugLog("RESPONSE", {
       status: event.status,
       headers: event.headers,
     });
   });
 
-  // Debug: log parsed stream events (toolcall_start/delta/end) to see what Pi's
-  // parser produces from the Poolside stream
+  // Log parsed stream events for tool calls
   pi.on("message_update", (event) => {
     const msg = event.message;
     if (msg.role !== "assistant") return;
@@ -93,7 +82,7 @@ export default async function (pi: ExtensionAPI) {
       apiEvent.type === "toolcall_delta" ||
       apiEvent.type === "toolcall_end"
     ) {
-      debugLog(`stream:${apiEvent.type}`, {
+      debugLog(`STREAM:${apiEvent.type}`, {
         contentIndex: apiEvent.contentIndex,
         ...(apiEvent.type === "toolcall_start"
           ? {
