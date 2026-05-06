@@ -1,4 +1,7 @@
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type {
+  BeforeProviderRequestEvent,
+  ExtensionAPI,
+} from "@mariozechner/pi-coding-agent";
 import { getPoolsideApiKey } from "../../lib/env";
 import {
   fetchModels,
@@ -36,6 +39,25 @@ function registerPoolsideProvider(
 export default async function (pi: ExtensionAPI) {
   // Register with hardcoded cache immediately so models are available on startup
   registerPoolsideProvider(pi, POOLSIDE_MODELS_CACHE);
+
+  // Poolside streaming emits tool calls with two different IDs at the same
+  // index (one for the name, one for the arguments). This can cause Pi's
+  // openai-completions parser to create phantom empty tool calls. Setting
+  // parallel_tool_calls to false limits the damage and is good practice
+  // regardless since Poolside docs say forced tool calling is unsupported
+  // when thinking is enabled.
+  pi.on("before_provider_request", (event: BeforeProviderRequestEvent) => {
+    const payload = event.payload as Record<string, unknown> | undefined;
+    if (!payload) return;
+    // Inject parallel_tool_calls: false to reduce duplicate tool call issues
+    if (
+      payload.tools &&
+      Array.isArray(payload.tools) &&
+      payload.tools.length > 0
+    ) {
+      payload.parallel_tool_calls = false;
+    }
+  });
 
   // On session start: fetch live models and re-register if they differ
   pi.on("session_start", async (_event, ctx) => {
