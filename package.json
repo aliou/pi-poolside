@@ -27,14 +27,12 @@
     "README.md"
   ],
   "peerDependencies": {
-    "@mariozechner/pi-ai": ">=0.70.0",
     "@mariozechner/pi-coding-agent": ">=0.70.0"
   },
   "devDependencies": {
     "@aliou/biome-plugins": "^0.8.1",
     "@biomejs/biome": "^2.4.12",
     "@changesets/cli": "^2.27.11",
-    "@mariozechner/pi-ai": "0.72.0",
     "@mariozechner/pi-coding-agent": "0.72.0",
     "@types/node": "^25.0.10",
     "husky": "^9.1.7",
@@ -42,7 +40,6 @@
   },
   "pnpm": {
     "overrides": {
-      "@mariozechner/pi-ai": "$@mariozechner/pi-coding-agent",
       "@mariozechner/pi-tui": "$@mariozechner/pi-coding-agent"
     }
   },
@@ -58,9 +55,6 @@
   },
   "packageManager": "pnpm@10.26.1",
   "peerDependenciesMeta": {
-    "@mariozechner/pi-ai": {
-      "optional": true
-    },
     "@mariozechner/pi-coding-agent": {
       "optional": true
     }

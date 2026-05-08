@@ -5,7 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@mariozechner/pi-ai': 0.72.0
   '@mariozechner/pi-tui': 0.72.0
 
 importers:
@@ -21,9 +20,6 @@ importers:
       '@changesets/cli':
         specifier: ^2.27.11
         version: 2.31.0(@types/node@25.6.0)
-      '@mariozechner/pi-ai':
-        specifier: 0.72.0
-        version: 0.72.0(ws@8.20.0)(zod@4.4.3)
       '@mariozechner/pi-coding-agent':
         specifier: 0.72.0
         version: 0.72.0(ws@8.20.0)(zod@4.4.3)
@@ -415,6 +411,12 @@ packages:
   '@mariozechner/pi-ai@0.72.0':
     resolution: {integrity: sha512-7YJJ2t4OlMVETFA7YGXcuQLJZi600iu6P/OPp9mWb+1U/uTcpEcSOlm/gAzrU0uJsDBsz7fyJRgIIwbGo2p59g==}
     engines: {node: '>=20.0.0'}
+    hasBin: true
+
+  '@mariozechner/pi-ai@0.72.1':
+    resolution: {integrity: sha512-mOq71Pjnu72xxzwrh52VIiNwt+/a+Wpa11k5segi01/zTZJt8eMDc5Q2z6GhczYMr5+6EpZ8T+BaeHqq0jk5ag==}
+    engines: {node: '>=20.0.0'}
+    deprecated: please use @earendil-works/pi-ai instead going forward
     hasBin: true
 
   '@mariozechner/pi-coding-agent@0.72.0':
@@ -2186,7 +2188,7 @@ snapshots:
 
   '@mariozechner/pi-agent-core@0.72.1(ws@8.20.0)(zod@4.4.3)':
     dependencies:
-      '@mariozechner/pi-ai': 0.72.0(ws@8.20.0)(zod@4.4.3)
+      '@mariozechner/pi-ai': 0.72.1(ws@8.20.0)(zod@4.4.3)
       typebox: 1.1.38
     transitivePeerDependencies:
       - '@modelcontextprotocol/sdk'
@@ -2198,6 +2200,28 @@ snapshots:
       - zod
 
   '@mariozechner/pi-ai@0.72.0(ws@8.20.0)(zod@4.4.3)':
+    dependencies:
+      '@anthropic-ai/sdk': 0.91.1(zod@4.4.3)
+      '@aws-sdk/client-bedrock-runtime': 3.1043.0
+      '@google/genai': 1.52.0
+      '@mistralai/mistralai': 2.2.1
+      chalk: 5.6.2
+      openai: 6.26.0(ws@8.20.0)(zod@4.4.3)
+      partial-json: 0.1.7
+      proxy-agent: 6.5.0
+      typebox: 1.1.38
+      undici: 7.25.0
+      zod-to-json-schema: 3.25.2(zod@4.4.3)
+    transitivePeerDependencies:
+      - '@modelcontextprotocol/sdk'
+      - aws-crt
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+      - ws
+      - zod
+
+  '@mariozechner/pi-ai@0.72.1(ws@8.20.0)(zod@4.4.3)':
     dependencies:
       '@anthropic-ai/sdk': 0.91.1(zod@4.4.3)
       '@aws-sdk/client-bedrock-runtime': 3.1043.0

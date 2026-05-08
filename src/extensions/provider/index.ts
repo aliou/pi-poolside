@@ -10,7 +10,6 @@ import {
   POOLSIDE_MODELS_CACHE,
   type PoolsideModelConfig,
 } from "./models";
-import { streamSimplePoolside } from "./stream";
 
 const DEBUG_LOG_FILE = "/tmp/pi-poolside-debug.log";
 
@@ -41,7 +40,6 @@ function registerPoolsideProvider(
     baseUrl: "https://inference.poolside.ai/v1",
     apiKey: "POOLSIDE_API_KEY",
     api: "openai-completions",
-    streamSimple: streamSimplePoolside,
     headers: {
       Referer: "https://pi.dev",
       "X-Title": "npm:@aliou/pi-poolside",
