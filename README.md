@@ -13,23 +13,34 @@ Provides the `poolside` provider with OpenAI-compatible completions endpoint.
 
 ## Setup
 
-1. Set your API key via Pi auth storage:
+1. Install the package:
 
    ```bash
-   pi auth set poolside
+   pi install github:aliou/pi-poolside
    ```
 
-   Or set the `POOLSIDE_API_KEY` environment variable.
+2. Configure your API key. Either:
 
-2. Install the package:
-
-   ```bash
-   pi add @aliou/pi-poolside
-   ```
+   - Set the `POOLSIDE_API_KEY` environment variable
+   - Add the key to `~/.pi/agent/auth.json`:
+     ```json
+     { "poolside": { "type": "api_key", "key": "your-api-key" } }
+     ```
+   - Add the key via `models.json` (see [Custom Models docs](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/models.md) for full configuration reference):
+     ```json
+     {
+       "providers": {
+         "poolside": {
+           "apiKey": "your-api-key"
+         }
+       }
+     }
+     ```
 
 3. Select a poolside model in Pi.
 
 ## Auth resolution order
 
-1. Pi auth storage (`auth.json` entry for `poolside`)
-2. Environment variable `POOLSIDE_API_KEY`
+1. CLI `--api-key` flag
+2. `auth.json` entry for `poolside`
+3. Environment variable `POOLSIDE_API_KEY`
