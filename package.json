@@ -16,7 +16,7 @@
   },
   "pi": {
     "extensions": [
-      "./src/extensions/provider/index.ts"
+      "./extensions/provider/index.ts"
     ]
   },
   "publishConfig": {
@@ -24,23 +24,25 @@
   },
   "files": [
     "src",
+    "extensions",
     "README.md"
   ],
   "peerDependencies": {
-    "@mariozechner/pi-coding-agent": ">=0.70.0"
+    "@earendil-works/pi-coding-agent": ">=0.80.8 <0.81.0"
   },
   "devDependencies": {
-    "@aliou/biome-plugins": "^0.8.1",
-    "@biomejs/biome": "^2.4.12",
+    "@aliou/biome-plugins": "^0.11.0",
+    "@biomejs/biome": "^2.5.2",
     "@changesets/cli": "^2.27.11",
-    "@mariozechner/pi-coding-agent": "0.72.0",
+    "@earendil-works/pi-coding-agent": "0.80.8",
     "@types/node": "^25.0.10",
     "husky": "^9.1.7",
     "typescript": "^5.9.3"
   },
   "pnpm": {
     "overrides": {
-      "@mariozechner/pi-tui": "$@mariozechner/pi-coding-agent"
+      "@earendil-works/pi-ai": "$@earendil-works/pi-coding-agent",
+      "@earendil-works/pi-tui": "$@earendil-works/pi-coding-agent"
     }
   },
   "scripts": {
@@ -55,7 +57,7 @@
   },
   "packageManager": "pnpm@10.26.1",
   "peerDependenciesMeta": {
-    "@mariozechner/pi-coding-agent": {
+    "@earendil-works/pi-coding-agent": {
       "optional": true
     }
   }

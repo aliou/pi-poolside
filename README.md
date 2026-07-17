@@ -3,6 +3,8 @@
 Pi extension package for the [Poolside](https://poolside.ai) inference API.
 
 Provides the `poolside` provider with OpenAI-compatible completions endpoint.
+The extension registers cached models at startup and refreshes the model list
+through Pi's provider refresh API when credentials are available.
 
 ## Models
 
@@ -16,7 +18,7 @@ Provides the `poolside` provider with OpenAI-compatible completions endpoint.
 1. Install the package:
 
    ```bash
-   pi install github:aliou/pi-poolside
+   pi install npm:@aliou/pi-poolside
    ```
 
 2. Configure your API key. Either:
@@ -44,3 +46,16 @@ Provides the `poolside` provider with OpenAI-compatible completions endpoint.
 1. CLI `--api-key` flag
 2. `auth.json` entry for `poolside`
 3. Environment variable `POOLSIDE_API_KEY`
+
+## Development
+
+```bash
+pnpm install
+pnpm typecheck
+pnpm lint
+pnpm check:lockfile
+```
+
+## Layout
+
+- `extensions/provider/`: Pi provider extension entry point and model refresh logic.

@@ -2,7 +2,7 @@
 // Source: https://inference.poolside.ai/v1/models
 // Pricing is $0 during beta.
 
-import type { ProviderModelConfig } from "@mariozechner/pi-coding-agent";
+import type { ProviderModelConfig } from "@earendil-works/pi-coding-agent";
 
 export interface PoolsideModelConfig extends ProviderModelConfig {}
 
@@ -124,13 +124,21 @@ export type FetchModelsResult =
   | { success: true; models: PoolsideModelConfig[] }
   | { success: false; error: string };
 
-export async function fetchModels(apiKey: string): Promise<FetchModelsResult> {
+export async function fetchModels(
+  apiKey: string,
+  signal?: AbortSignal,
+): Promise<FetchModelsResult> {
   try {
+    const timeoutSignal = AbortSignal.timeout(10_000);
+    const requestSignal = signal
+      ? AbortSignal.any([signal, timeoutSignal])
+      : timeoutSignal;
+
     const response = await fetch("https://inference.poolside.ai/v1/models", {
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
-      signal: AbortSignal.timeout(10_000),
+      signal: requestSignal,
     });
 
     if (!response.ok) {
