@@ -10,8 +10,8 @@ through Pi's provider refresh API when credentials are available.
 
 | Model | Reasoning | Context | Max Output |
 |-------|-----------|---------|------------|
-| `poolside/laguna-m.1` | yes | 131072 | 8192 |
-| `poolside/laguna-xs.2` | yes | 131072 | 8192 |
+| `poolside/laguna-m.1` | yes | 262144 | 32768 |
+| `poolside/laguna-xs-2.1` | yes | 262144 | 32768 |
 
 ## Setup
 

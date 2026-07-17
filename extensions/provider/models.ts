@@ -1,10 +1,8 @@
 // Models from Poolside API
 // Source: https://inference.poolside.ai/v1/models
-// Pricing is $0 during beta.
+// Pricing returns $0 during free preview; hardcoded cache uses placeholder values.
 
 import type { ProviderModelConfig } from "@earendil-works/pi-coding-agent";
-
-export interface PoolsideModelConfig extends ProviderModelConfig {}
 
 const POOLSIDE_THINKING_LEVEL_MAP = {
   minimal: null,
@@ -15,20 +13,20 @@ const POOLSIDE_THINKING_LEVEL_MAP = {
 } as const;
 
 /** Hardcoded model cache. Used on startup before live models are fetched. */
-export const POOLSIDE_MODELS_CACHE: PoolsideModelConfig[] = [
+export const POOLSIDE_MODELS_CACHE: ProviderModelConfig[] = [
   {
     id: "poolside/laguna-m.1",
     name: "Laguna M.1",
     reasoning: true,
     input: ["text"],
     cost: {
-      input: 0,
-      output: 0,
-      cacheRead: 0,
-      cacheWrite: 0,
+      input: 0.2,
+      output: 0.4,
+      cacheRead: 0.1,
+      cacheWrite: 0.25,
     },
-    contextWindow: 131072,
-    maxTokens: 8192,
+    contextWindow: 262144,
+    maxTokens: 32768,
     thinkingLevelMap: POOLSIDE_THINKING_LEVEL_MAP,
     compat: {
       supportsDeveloperRole: false,
@@ -36,18 +34,18 @@ export const POOLSIDE_MODELS_CACHE: PoolsideModelConfig[] = [
     },
   },
   {
-    id: "poolside/laguna-xs.2",
-    name: "Laguna XS.2",
+    id: "poolside/laguna-xs-2.1",
+    name: "Laguna XS 2.1",
     reasoning: true,
     input: ["text"],
     cost: {
-      input: 0,
-      output: 0,
-      cacheRead: 0,
+      input: 0.06,
+      output: 0.12,
+      cacheRead: 0.03,
       cacheWrite: 0,
     },
-    contextWindow: 131072,
-    maxTokens: 8192,
+    contextWindow: 262144,
+    maxTokens: 32768,
     thinkingLevelMap: POOLSIDE_THINKING_LEVEL_MAP,
     compat: {
       supportsDeveloperRole: false,
@@ -56,7 +54,7 @@ export const POOLSIDE_MODELS_CACHE: PoolsideModelConfig[] = [
   },
 ];
 
-/** Response shape from the /v1/models endpoint. */
+/** Response shape from the Poolside /v1/models endpoint. */
 interface PoolsideModelsResponse {
   data: Array<{
     id: string;
@@ -73,6 +71,7 @@ interface PoolsideModelsResponse {
       completion: string;
       image: string;
       request: string;
+      input_cache_read?: string;
     };
     supported_sampling_parameters: string[];
     supported_features: string[];
@@ -80,15 +79,6 @@ interface PoolsideModelsResponse {
     output_modalities: string[];
     hugging_face_id?: string;
   }>;
-}
-
-function parseCost(pricing: PoolsideModelsResponse["data"][number]["pricing"]) {
-  return {
-    input: Number.parseFloat(pricing.prompt) || 0,
-    output: Number.parseFloat(pricing.completion) || 0,
-    cacheRead: Number.parseFloat(pricing.prompt) || 0,
-    cacheWrite: 0,
-  };
 }
 
 function parseInputModalities(modalities: string[]): ("text" | "image")[] {
@@ -101,27 +91,37 @@ function parseInputModalities(modalities: string[]): ("text" | "image")[] {
 
 export function parseModelsResponse(
   response: PoolsideModelsResponse,
-): PoolsideModelConfig[] {
-  return response.data.map((model) => ({
-    id: model.id,
-    name: model.name,
-    reasoning: model.supported_features.includes("reasoning"),
-    input: parseInputModalities(model.input_modalities),
-    cost: parseCost(model.pricing),
-    contextWindow: model.context_length,
-    maxTokens: model.max_completion_tokens,
-    thinkingLevelMap: model.supported_features.includes("reasoning")
-      ? POOLSIDE_THINKING_LEVEL_MAP
-      : undefined,
-    compat: {
-      supportsDeveloperRole: false,
-      maxTokensField: "max_tokens" as const,
-    },
-  }));
+): ProviderModelConfig[] {
+  return response.data.map((model) => {
+    // API returns $0 during free preview; keep as-is
+    const pricing = model.pricing;
+    return {
+      id: model.id,
+      name: model.name,
+      reasoning: model.supported_features.includes("reasoning"),
+      input: parseInputModalities(model.input_modalities),
+      cost: {
+        input: Number.parseFloat(pricing.prompt) || 0,
+        output: Number.parseFloat(pricing.completion) || 0,
+        cacheRead:
+          Number.parseFloat(pricing.input_cache_read ?? pricing.prompt) || 0,
+        cacheWrite: 0,
+      },
+      contextWindow: model.context_length,
+      maxTokens: model.max_completion_tokens,
+      thinkingLevelMap: model.supported_features.includes("reasoning")
+        ? POOLSIDE_THINKING_LEVEL_MAP
+        : undefined,
+      compat: {
+        supportsDeveloperRole: false,
+        maxTokensField: "max_tokens",
+      },
+    };
+  });
 }
 
 export type FetchModelsResult =
-  | { success: true; models: PoolsideModelConfig[] }
+  | { success: true; models: ProviderModelConfig[] }
   | { success: false; error: string };
 
 export async function fetchModels(
@@ -135,16 +135,14 @@ export async function fetchModels(
       : timeoutSignal;
 
     const response = await fetch("https://inference.poolside.ai/v1/models", {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
+      headers: { Authorization: `Bearer ${apiKey}` },
       signal: requestSignal,
     });
 
     if (!response.ok) {
       return {
         success: false,
-        error: `HTTP ${response.status}: ${response.statusText}`,
+        error: `Poolside API error: HTTP ${response.status}: ${response.statusText}`,
       };
     }
 
