@@ -52,6 +52,25 @@ export const POOLSIDE_MODELS_CACHE: ProviderModelConfig[] = [
       maxTokensField: "max_tokens",
     },
   },
+  {
+    id: "poolside/laguna-s-2.1",
+    name: "Laguna S 2.1",
+    reasoning: true,
+    input: ["text"],
+    cost: {
+      input: 0.1,
+      output: 0.2,
+      cacheRead: 0.05,
+      cacheWrite: 0,
+    },
+    contextWindow: 262144,
+    maxTokens: 32768,
+    thinkingLevelMap: POOLSIDE_THINKING_LEVEL_MAP,
+    compat: {
+      supportsDeveloperRole: false,
+      maxTokensField: "max_tokens",
+    },
+  },
 ];
 
 /** Response shape from the Poolside /v1/models endpoint. */
