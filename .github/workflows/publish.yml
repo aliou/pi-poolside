@@ -38,6 +38,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           scope: "@aliou"
           cache: "pnpm"
+          token: ${{ secrets.NPM_TOKEN }}
 
       - name: Upgrade npm for stage publish support
         run: npm install -g npm@latest
