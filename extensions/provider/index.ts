@@ -1,3 +1,4 @@
+import type { Api, Model } from "@earendil-works/pi-ai";
 import type {
   ExtensionAPI,
   ProviderConfig,
@@ -5,6 +6,7 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 
 import { fetchModels, POOLSIDE_MODELS_CACHE } from "./models";
+import { persistModels, readStoredModels } from "./refresh-store-compat";
 
 const PROVIDER_ID = "poolside";
 const PROVIDER_NAME = "Poolside";
@@ -26,7 +28,7 @@ function createRefreshModels(
   staticModels: ProviderModelConfig[],
 ): NonNullable<ProviderConfig["refreshModels"]> {
   return async (context) => {
-    const stored = await context.store.read();
+    const stored = await readStoredModels(context);
     const cachedModels = stored?.models as ProviderModelConfig[] | undefined;
     const fallbackModels = cachedModels?.length
       ? buildModelsPayload(cachedModels)
@@ -45,9 +47,11 @@ function createRefreshModels(
     const result = await fetchModels(apiKey, context.signal);
     if (!result.success || result.models.length === 0) return fallbackModels;
 
+    context.signal?.throwIfAborted();
+
     const models = buildModelsPayload(result.models);
-    await context.store.write({
-      models: models as never,
+    await persistModels(context, {
+      models: models as unknown as Model<Api>[],
       checkedAt: Date.now(),
     });
     return models;
